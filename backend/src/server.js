@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import dotenv from "dotenv";
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
@@ -7,7 +7,7 @@ import connectToDatabase from './config/database.js'
 import questionsRouter from './routes/questions.js'
 
 const app = express()
-
+dotenv.config();
 const allowedOrigins = process.env.CLIENT_ORIGIN
   ? process.env.CLIENT_ORIGIN.split(',').map((item) => item.trim()).filter(Boolean)
   : ['http://localhost:5173']

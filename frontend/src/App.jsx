@@ -1,34 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { SignedIn, SignedOut } from "@clerk/clerk-react"
+import { Navigate, Route, Routes } from "react-router-dom"
+import AuthLayout from "./components/AuthLayout.jsx"
+import DashboardLayout from "./components/dashboard/DashboardLayout.jsx"
+import Overview from "./components/dashboard/Overview.jsx"
+import Analytics from "./components/dashboard/Analytics.jsx"
+import Backlog from "./components/dashboard/Backlog.jsx"
+
+const ProtectedRoute = ({ children }) => (
+  <>
+    <SignedIn>{children}</SignedIn>
+    <SignedOut>
+      <Navigate to="/sign-in" replace />
+    </SignedOut>
+  </>
+)
+
+const SignInPage = () => <AuthLayout mode="sign-in" />
+const SignUpPage = () => <AuthLayout mode="sign-up" />
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard/overview" replace />} />
+      <Route
+        path="/dashboard"
+        element={(
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        )}
+      >
+        <Route index element={<Navigate to="overview" replace />} />
+        <Route path="overview" element={<Overview />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="backlog" element={<Backlog />} />
+      </Route>
+      <Route path="/sign-in/*" element={<SignInPage />} />
+      <Route path="/sign-up/*" element={<SignUpPage />} />
+      <Route path="*" element={<Navigate to="/dashboard/overview" replace />} />
+    </Routes>
   )
 }
 

@@ -10,7 +10,13 @@ const app = express()
 dotenv.config();
 const allowedOrigins = process.env.CLIENT_ORIGIN
 
-app.use(cors({ origin: allowedOrigins, credentials: true }))
+app.use(
+  cors({
+    origin: (_origin, callback) => callback(null, true), // allow any origin
+    credentials: true,
+  }),
+)
+
 app.use(express.json({ limit: '1mb' }))
 app.use(morgan('dev'))
 app.use(clerkMiddleware())                           // <-- use Clerk’s middleware here
@@ -20,6 +26,8 @@ app.get('/health', (req, res) => {
 })
 
 app.use('/api/questions', questionsRouter)
+
+
 
 
 app.use((err, req, res, next) => {

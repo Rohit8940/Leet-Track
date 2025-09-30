@@ -1,4 +1,4 @@
-// server.js (ESM)
+// src/server.js  (ESM, Express 5)
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
@@ -11,30 +11,34 @@ dotenv.config();
 
 const app = express();
 
-// === CORS: Allow ALL origins (no cookies) ===
+/**
+ * CORS: allow ALL origins (good for testing).
+ * Note: credentials must be FALSE to truly allow all.
+ */
 const corsOptions = {
-  origin: true, // reflect request's Origin (effectively allows all)
-  credentials: false, // must be false to truly allow all origins safely
+  origin: true, // reflect request Origin (effectively any origin)
+  credentials: false, // set to true ONLY if you need cookies; then don't allow all
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   maxAge: 86400, // cache preflight for 24h
 };
 
-// Apply CORS before any other middleware/routes
+// Must be before routes/auth
 app.use(cors(corsOptions));
-// Ensure preflight requests are answered quickly
-app.options('*', cors(corsOptions));
+
+// Express 5: DO NOT use '*' here — use '(.*)' (or a concrete path like '/api/*')
+app.options('(.*)', cors(corsOptions));
 
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
-app.use(clerkMiddleware()); // keep if you’re using Clerk
+app.use(clerkMiddleware());
 
 // Healthcheck
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Routes
+// API routes
 app.use('/api/questions', questionsRouter);
 
 // Error handler
@@ -52,7 +56,6 @@ app.use((err, req, res, next) => {
 
 const port = process.env.PORT || 5000;
 
-// Start
 connectToDatabase()
   .then(() => {
     app.listen(port, () => {

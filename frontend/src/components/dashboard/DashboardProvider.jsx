@@ -13,11 +13,27 @@ import {
 import { DashboardDataContext } from "./DashboardContext.jsx"
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const STORAGE_KEY = "leet-track.dashboard.questions"
 
 const DashboardProvider = ({ children }) => {
   const { getToken, isLoaded: authLoaded } = useAuth()
   const { user, isLoaded: userLoaded } = useUser()
-  const [questions, setQuestions] = useState([])
+  const [questions, setQuestions] = useState(() => {
+    if (typeof window === "undefined") {
+      return []
+    }
+    try {
+      const cached = window.localStorage.getItem(STORAGE_KEY)
+      if (!cached) {
+        return []
+      }
+      const parsed = JSON.parse(cached)
+      return Array.isArray(parsed) ? parsed : []
+    } catch (error) {
+      console.error("Failed to read stored dashboard state", error)
+      return []
+    }
+  })
   const [urlInput, setUrlInput] = useState("")
   const [feedback, setFeedback] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -248,6 +264,33 @@ const DashboardProvider = ({ children }) => {
       setActiveReview(null)
     }
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questions))
+    } catch (error) {
+      console.error("Failed to persist dashboard state", error)
+    }
+  }, [questions])
+
+  useEffect(() => {
+    if (!userLoaded) {
+      return
+    }
+    if (!user) {
+      setQuestions([])
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.removeItem(STORAGE_KEY)
+        } catch (error) {
+          console.error("Failed to clear dashboard state", error)
+        }
+      }
+    }
+  }, [user, userLoaded])
 
   const displayName = useMemo(() => {
     if (!user) return ""

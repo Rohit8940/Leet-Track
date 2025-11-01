@@ -19,7 +19,7 @@ app.use(
 
 app.use(express.json({ limit: '1mb' }))
 app.use(morgan('dev'))
-app.use(clerkMiddleware())                           // <-- use Clerk’s middleware here
+app.use(clerkMiddleware())                           // <-- use Clerk's middleware here
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })

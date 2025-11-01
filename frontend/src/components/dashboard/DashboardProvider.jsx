@@ -9,6 +9,8 @@ import {
   computeStreak,
   extractTitleFromUrl,
   getToday,
+  sanitizeDeep,
+  sanitizeText,
 } from "./dashboardUtils.js"
 import { DashboardDataContext } from "./DashboardContext.jsx"
 
@@ -62,16 +64,21 @@ const DashboardProvider = ({ children }) => {
         })
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({}))
-          throw new Error(errorBody.message || "Unable to fetch questions")
+          const cleanedMessage = sanitizeText(errorBody.message || "Unable to fetch questions") || "Unable to fetch questions"
+          throw new Error(cleanedMessage)
         }
         const payload = await response.json()
         if (!isMounted) {
           return
         }
-        const data = Array.isArray(payload.data)
-          ? payload.data.map((item) => ({ ...item, id: item.id || item._id }))
-          : []
-        setQuestions(data)
+        const rawData = Array.isArray(payload.data) ? payload.data : []
+        const sanitizedData = sanitizeDeep(rawData)
+        const normalized = sanitizedData.map((item) => ({
+          ...item,
+          id: item.id || item._id,
+          reviews: Array.isArray(item.reviews) ? item.reviews : [],
+        }))
+        setQuestions(normalized)
       } catch (error) {
         console.error("Failed to load questions", error)
         if (isMounted) {
@@ -207,7 +214,8 @@ const DashboardProvider = ({ children }) => {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}))
-        setFeedback({ type: "error", message: body.message || "Could not save this problem." })
+        const message = sanitizeText(body.message || "Could not save this problem.") || "Could not save this problem."
+        setFeedback({ type: "error", message })
         return
       }
 
@@ -216,9 +224,17 @@ const DashboardProvider = ({ children }) => {
         throw new Error("Malformed response from server")
       }
 
-      setQuestions((prev) => [payload.data, ...prev])
+      const sanitizedQuestion = sanitizeDeep(payload.data)
+      const normalizedQuestion = {
+        ...sanitizedQuestion,
+        id: sanitizedQuestion.id || sanitizedQuestion._id,
+        reviews: Array.isArray(sanitizedQuestion.reviews) ? sanitizedQuestion.reviews : [],
+      }
+
+      setQuestions((prev) => [normalizedQuestion, ...prev])
       setUrlInput("")
-      setFeedback({ type: "success", message: `Saved "${payload.data.title}" to your log.` })
+      const safeTitle = sanitizeText(normalizedQuestion.title || "problem")
+      setFeedback({ type: "success", message: `Saved "${safeTitle}" to your log.` })
     } catch (error) {
       console.error("Failed to submit question", error)
       setFeedback({ type: "error", message: "Unexpected error while saving. Try again." })
@@ -247,7 +263,8 @@ const DashboardProvider = ({ children }) => {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}))
-        setFeedback({ type: "error", message: body.message || "Unable to update this review." })
+        const message = sanitizeText(body.message || "Unable to update this review.") || "Unable to update this review."
+        setFeedback({ type: "error", message })
         return
       }
 
@@ -256,7 +273,14 @@ const DashboardProvider = ({ children }) => {
         throw new Error("Malformed response from server")
       }
 
-      setQuestions((prev) => prev.map((item) => (item.id === payload.data.id ? payload.data : item)))
+      const sanitizedUpdate = sanitizeDeep(payload.data)
+      const normalizedUpdate = {
+        ...sanitizedUpdate,
+        id: sanitizedUpdate.id || sanitizedUpdate._id,
+        reviews: Array.isArray(sanitizedUpdate.reviews) ? sanitizedUpdate.reviews : [],
+      }
+
+      setQuestions((prev) => prev.map((item) => (item.id === normalizedUpdate.id ? normalizedUpdate : item)))
     } catch (error) {
       console.error("Failed to toggle review status", error)
       setFeedback({ type: "error", message: "Unexpected error while updating. Try again." })
@@ -294,13 +318,17 @@ const DashboardProvider = ({ children }) => {
 
   const displayName = useMemo(() => {
     if (!user) return ""
+
+    let raw = ""
     if (user.fullName) {
-      return user.fullName
+      raw = user.fullName
+    } else if (user.firstName || user.lastName) {
+      raw = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()
+    } else {
+      raw = user.primaryEmailAddress?.emailAddress ?? ""
     }
-    if (user.firstName || user.lastName) {
-      return `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()
-    }
-    return user.primaryEmailAddress?.emailAddress ?? ""
+
+    return sanitizeText(raw)
   }, [user])
 
   const value = {

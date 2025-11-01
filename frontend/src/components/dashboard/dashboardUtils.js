@@ -4,6 +4,47 @@ export const REVIEW_OFFSETS = [
   { type: "day15", label: "15-Day Review", days: 15 },
 ]
 
+const ASCII_REPLACEMENTS = [
+  { regex: /[\u2012-\u2015\u2212]/g, replacement: "-" },
+  { regex: /[\u2018\u2019\u201A\u201B\u2032\u2035]/g, replacement: "'" },
+  { regex: /[\u201C\u201D\u201E\u201F\u2033\u2036]/g, replacement: "\"" },
+  { regex: /[\u2022\u2023\u25E6\u2043\u2219]/g, replacement: "-" },
+  { regex: /[\u2026]/g, replacement: "..." },
+  { regex: /[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, replacement: " " },
+]
+
+const CONTROL_CHARS_REGEX = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F]/g
+const NON_ASCII_PRINTABLE_REGEX = /[^\x09\x0A\x0D\x20-\x7E]/g
+
+export const sanitizeText = (value) => {
+  if (typeof value !== "string") {
+    return value
+  }
+
+  let sanitized = value.normalize("NFKD")
+
+  ASCII_REPLACEMENTS.forEach(({ regex, replacement }) => {
+    sanitized = sanitized.replace(regex, replacement)
+  })
+
+  sanitized = sanitized.replace(CONTROL_CHARS_REGEX, "")
+  sanitized = sanitized.replace(NON_ASCII_PRINTABLE_REGEX, "")
+
+  return sanitized
+}
+
+export const sanitizeDeep = (input) => {
+  if (Array.isArray(input)) {
+    return input.map(sanitizeDeep)
+  }
+
+  if (input && typeof input === "object") {
+    return Object.fromEntries(Object.entries(input).map(([key, value]) => [key, sanitizeDeep(value)]))
+  }
+
+  return sanitizeText(input)
+}
+
 export const LABEL_LOOKUP = REVIEW_OFFSETS.reduce((acc, item) => {
   acc[item.type] = item.label
   return acc

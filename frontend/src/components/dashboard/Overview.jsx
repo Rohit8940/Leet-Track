@@ -17,7 +17,7 @@ const Overview = () => {
 
   return (
     <div className="dashboard-surface">
-      {loading && <div className="sync-banner">Synchronizing your mission log…</div>}
+      {loading && <div className="sync-banner">Synchronizing your mission log...</div>}
 
       <section className="insight-grid">
         <article className="insight-card">
@@ -59,7 +59,7 @@ const Overview = () => {
           <div className="panel-header">
             <div>
               <h3>Log today&apos;s victory</h3>
-              <p>Paste the LeetCode URL — we capture the title, set the cadence, and track it forever.</p>
+              <p>Paste the LeetCode URL -- we capture the title, set the cadence, and track it forever.</p>
             </div>
           </div>
           <form className="capture-form" onSubmit={handleSubmit}>
@@ -74,7 +74,7 @@ const Overview = () => {
                 disabled={submitting}
               />
               <button type="submit" disabled={submitting}>
-                {submitting ? "Scheduling…" : "Add to tracker"}
+                {submitting ? "Scheduling..." : "Add to tracker"}
               </button>
             </div>
             {feedback && (

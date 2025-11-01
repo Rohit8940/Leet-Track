@@ -27,7 +27,7 @@ const Backlog = () => {
           </div>
         </div>
         {pendingItems.length === 0 ? (
-          <div className="empty-card">No pending reviews — stellar consistency!</div>
+          <div className="empty-card">No pending reviews -- stellar consistency!</div>
         ) : (
           <ul className="pending-list">
             {pendingItems.map((item) => {
@@ -49,7 +49,7 @@ const Backlog = () => {
                       {item.questionTitle}
                     </a>
                     <p>
-                      {LABEL_LOOKUP[item.type]} · due {formatDisplayDate(item.dueOn)} · {daysOverdue} day
+                      {LABEL_LOOKUP[item.type]} - due {formatDisplayDate(item.dueOn)} - {daysOverdue} day
                       {daysOverdue === 1 ? "" : "s"} overdue
                     </p>
                   </div>
@@ -59,7 +59,7 @@ const Backlog = () => {
                     onClick={() => toggleReviewStatus(item.questionId, item.type)}
                     disabled={isBusy}
                   >
-                    {isBusy ? "Updating…" : "Resolve"}
+                    {isBusy ? "Updating..." : "Resolve"}
                   </button>
                 </li>
               )
@@ -71,7 +71,7 @@ const Backlog = () => {
       <section className="panel upcoming-panel">
         <div className="panel-header">
           <div>
-            <h3>Radar — next checkpoints</h3>
+            <h3>Radar -- next checkpoints</h3>
             <p>Preview what&apos;s about to hit so you can plan your sessions.</p>
           </div>
         </div>

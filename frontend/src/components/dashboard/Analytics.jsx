@@ -42,7 +42,7 @@ const Analytics = () => {
           <span>Total checkpoints</span>
           <h2>{stats.totalReviews}</h2>
           <p>
-            {stats.totalCompleted} completed · {stats.totalReviews - stats.totalCompleted} pending
+            {stats.totalCompleted} completed - {stats.totalReviews - stats.totalCompleted} pending
           </p>
         </div>
         <div className="metric-card">
@@ -141,7 +141,7 @@ const Analytics = () => {
                 <div>
                   <strong>{item.name}</strong>
                   <p>
-                    {item.completed} completed · {item.remaining} remaining · {item.progress}% complete
+                    {item.completed} completed - {item.remaining} remaining - {item.progress}% complete
                   </p>
                 </div>
               </li>
